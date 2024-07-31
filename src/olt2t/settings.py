@@ -11,6 +11,10 @@ class PathOrModelName(NonEmptyStringMixIn, TrimmedStringMixIn):
     pass
 
 
+class ApiKey(NonEmptyStringMixIn, TrimmedStringMixIn):
+    pass
+
+
 class BaseSettings(OltlBaseSettings):
     model_config = SettingsConfigDict(env_prefix="OLT2T_")
 
@@ -18,6 +22,12 @@ class BaseSettings(OltlBaseSettings):
 class TextToTextModelType(str, Enum):
     PHI_3 = "PHI_3"
     ECHO = "ECHO"
+    OPENAI = "OPENAI"
+
+
+class OpenAiModelType(str, Enum):
+    GPT_4O_MINI = "gpt-4o-mini"
+    GPT_4_TURBO = "gpt-4-turbo"
 
 
 class BaseTextToTextModelSettings(BaseSettings):
@@ -36,8 +46,15 @@ class EchoTextToTextModelSettings(BaseTextToTextModelSettings):
     type: Literal[TextToTextModelType.ECHO] = TextToTextModelType.ECHO
 
 
+class OpenAiTextToTextModelSettings(BaseTextToTextModelSettings):
+    type: Literal[TextToTextModelType.OPENAI] = TextToTextModelType.OPENAI
+    api_key: ApiKey
+    openai_model_type: OpenAiModelType
+
+
 TextToTextModelSettings = Annotated[
-    Union[EchoTextToTextModelSettings, Phi3TextToTextModelSettings], Field(discriminator="type")
+    Union[EchoTextToTextModelSettings, Phi3TextToTextModelSettings, OpenAiTextToTextModelSettings],
+    Field(discriminator="type"),
 ]
 
 
