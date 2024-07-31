@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Union
 
 from oltl import NonEmptyStringMixIn, TrimmedStringMixIn
 from oltl.settings import BaseSettings as OltlBaseSettings
@@ -17,6 +17,7 @@ class BaseSettings(OltlBaseSettings):
 
 class TextToTextModelType(str, Enum):
     PHI_3 = "PHI_3"
+    ECHO = "ECHO"
 
 
 class BaseTextToTextModelSettings(BaseSettings):
@@ -31,7 +32,13 @@ class Phi3TextToTextModelSettings(BaseHuggingFaceTextToTextModelSettings):
     type: Literal[TextToTextModelType.PHI_3] = TextToTextModelType.PHI_3
 
 
-TextToTextModelSettings = Annotated[Phi3TextToTextModelSettings, Field(discriminator="type")]
+class EchoTextToTextModelSettings(BaseTextToTextModelSettings):
+    type: Literal[TextToTextModelType.ECHO] = TextToTextModelType.ECHO
+
+
+TextToTextModelSettings = Annotated[
+    Union[EchoTextToTextModelSettings, Phi3TextToTextModelSettings], Field(discriminator="type")
+]
 
 
 class TextToTextCoreSettings(BaseSettings):
