@@ -20,7 +20,14 @@ class OpenAiTextToTextModel(BaseTextToTextModel):
         return self._client
 
     def generate(self, text: StrT) -> Generator[StrT, None, None]:
-        for generated in self.client.completions.create(
-            model=self._openai_model_type.value, prompt=str(text), stream=True
+        for generated in self.client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": str(text)},
+            ],
+            model=self._openai_model_type.value,
+            stream=True,
         ):
-            yield StrT(generated.choices[0].text)
+            res = generated.choices[0].delta.content
+            if res is not None:
+                yield StrT(res)
