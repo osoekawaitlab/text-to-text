@@ -13,4 +13,4 @@ def test_phi3_generate() -> None:
     actual = sut.generate(StrT("Hello."))
     assert isinstance(actual, Generator)
     words = list(actual)
-    assert len(words) == 1
+    assert len(words) > 1

@@ -1,10 +1,12 @@
 from collections.abc import Generator
+from threading import Thread
 
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     PreTrainedModel,
     PreTrainedTokenizerBase,
+    TextIteratorStreamer,
 )
 
 from ..models import StrT
@@ -39,15 +41,20 @@ class Phi3TextToTextModel(BaseTextToTextModel):
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
 
-        input_length = inputs.input_ids.shape[1]
+        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-        for outputs in self.model.generate(
-            **inputs,
+        generation_kwargs = dict(
+            inputs,
             max_new_tokens=500,
             do_sample=False,
-            pad_token_id=self.tokenizer.eos_token_id,
-        ):
-            new_tokens = outputs[input_length:]
-            new_text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+            streamer=streamer,
+        )
+
+        thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
+        thread.start()
+
+        for new_text in streamer:
             if new_text.strip():
                 yield StrT(new_text)
+
+        thread.join()
