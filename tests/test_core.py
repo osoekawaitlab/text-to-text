@@ -32,9 +32,9 @@ def test_core_chat(mocker: MockerFixture) -> None:
 
 def test_core_summarize(mocker: MockerFixture) -> None:
     model = mocker.Mock(spec=BaseTextToTextModel)
-    model.summarize.return_value = StrT("word1")
+    model.summarize.return_value = iter([StrT("word1")])
     task = SummarizationTask(text=StrT("How to make a cake?"), target_length=5)
     core = TextToTextCore(model=model)
-    actual = core(task)
-    assert actual == StrT("word1")
+    actual = list(core(task))
+    assert actual == [StrT("word1")]
     model.summarize.assert_called_once_with(StrT("How to make a cake?"), target_length=5)

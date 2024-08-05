@@ -4,7 +4,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from olt2t import StrT
-from olt2t.models import ChatTurn
+from olt2t.models import ChatTurn, SummaryTargetLength
 from olt2t.settings import PathOrModelName
 from olt2t.text_to_text_models.phi3 import Phi3TextToTextModel
 
@@ -24,12 +24,14 @@ def test_phi3_text_to_text_model_generate() -> None:
 
 
 def test_phi3_text_to_text_model_summarize(mocker: MockerFixture) -> None:
+    generate = mocker.patch(
+        "olt2t.text_to_text_models.phi3.Phi3TextToTextModel.generate", return_value=iter([StrT("word1"), StrT("word2")])
+    )
     sut = Phi3TextToTextModel(path_or_model_name=PathOrModelName("microsoft/Phi-3-mini-4k-instruct"))
-    mocker.patch.object(sut, "generate", return_value=iter([StrT("word1"), StrT("word2")]))
-    actual = sut.summarize("How to make a cake?", target_length=5)
+    actual = sut.summarize(StrT.from_str("How to make a cake?"), target_length=SummaryTargetLength(5))
     actual_list = list(actual)
     assert actual_list == [StrT("word1"), StrT("word2")]
-    sut.generate.assert_called_once_with(
+    generate.assert_called_once_with(
         [
             {
                 "role": "system",
@@ -41,8 +43,10 @@ def test_phi3_text_to_text_model_summarize(mocker: MockerFixture) -> None:
 
 
 def test_phi3_text_to_text_model_respond(mocker: MockerFixture) -> None:
+    generate = mocker.patch(
+        "olt2t.text_to_text_models.phi3.Phi3TextToTextModel.generate", return_value=iter([StrT("word1"), StrT("word2")])
+    )
     sut = Phi3TextToTextModel(path_or_model_name=PathOrModelName("microsoft/Phi-3-mini-4k-instruct"))
-    mocker.patch.object(sut, "generate", return_value=iter([StrT("word1"), StrT("word2")]))
     actual = sut.respond(
         [
             ChatTurn(role="user", content="How to make a cake?"),
@@ -52,7 +56,7 @@ def test_phi3_text_to_text_model_respond(mocker: MockerFixture) -> None:
     )
     actual_list = list(actual)
     assert actual_list == [StrT("word1"), StrT("word2")]
-    sut.generate.assert_called_once_with(
+    generate.assert_called_once_with(
         [
             {"role": "system", "content": "You are a helpful AI assistant."},
             {"role": "user", "content": "How to make a cake?"},

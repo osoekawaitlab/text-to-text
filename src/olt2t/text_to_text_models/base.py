@@ -28,7 +28,7 @@ class BasicTextToTextModel(BaseTextToTextModel):
                 {
                     "role": "system",
                     "content": "Summarize the following text so that the resulting text will be length"
-                    f" of {target_length}:",
+                    f" of {int(target_length)}:",
                 },
                 {"role": "user", "content": str(text)},
             ]

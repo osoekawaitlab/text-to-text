@@ -5,7 +5,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from olt2t import StrT
-from olt2t.models import ChatTurn
+from olt2t.models import ChatTurn, SummaryTargetLength
 from olt2t.settings import ApiKey, OpenAiModelType
 from olt2t.text_to_text_models.openai import OpenAiTextToTextModel
 
@@ -29,12 +29,15 @@ def test_openai_text_to_text_model_generate() -> None:
 
 
 def test_openai_text_to_text_model_summarize(mocker: MockerFixture) -> None:
+    generate = mocker.patch(
+        "olt2t.text_to_text_models.openai.OpenAiTextToTextModel.generate",
+        return_value=iter([StrT("word1"), StrT("word2")]),
+    )
     sut = OpenAiTextToTextModel(api_key=ApiKey.from_str("DUMMY_KEY"), openai_model_type=OpenAiModelType.GPT_4O_MINI)
-    mocker.patch.object(sut, "generate", return_value=iter([StrT("word1"), StrT("word2")]))
-    actual = sut.summarize("How to make a cake?", target_length=5)
+    actual = sut.summarize(StrT.from_str("How to make a cake?"), target_length=SummaryTargetLength(5))
     actual_list = list(actual)
     assert actual_list == [StrT("word1"), StrT("word2")]
-    sut.generate.assert_called_once_with(
+    generate.assert_called_once_with(
         [
             {
                 "role": "system",
@@ -46,8 +49,11 @@ def test_openai_text_to_text_model_summarize(mocker: MockerFixture) -> None:
 
 
 def test_openai_text_to_text_respond(mocker: MockerFixture) -> None:
+    generate = mocker.patch(
+        "olt2t.text_to_text_models.openai.OpenAiTextToTextModel.generate",
+        return_value=iter([StrT("word1"), StrT("word2")]),
+    )
     sut = OpenAiTextToTextModel(api_key=ApiKey.from_str("DUMMY_KEY"), openai_model_type=OpenAiModelType.GPT_4O_MINI)
-    mocker.patch.object(sut, "generate", return_value=iter([StrT("word1"), StrT("word2")]))
     actual = sut.respond(
         [
             ChatTurn(role="user", content="How to make a cake?"),
@@ -57,7 +63,7 @@ def test_openai_text_to_text_respond(mocker: MockerFixture) -> None:
     )
     actual_list = list(actual)
     assert actual_list == [StrT("word1"), StrT("word2")]
-    sut.generate.assert_called_once_with(
+    generate.assert_called_once_with(
         [
             {"role": "system", "content": "You are a helpful AI assistant."},
             {"role": "user", "content": "How to make a cake?"},
