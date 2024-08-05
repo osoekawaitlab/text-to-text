@@ -3,7 +3,6 @@ from pytest_mock import MockerFixture
 
 from olt2t.settings import (
     BaseTextToTextModelSettings,
-    EchoTextToTextModelSettings,
     OpenAiModelType,
     OpenAiTextToTextModelSettings,
     PathOrModelName,
@@ -21,14 +20,6 @@ def test_create_text_to_text_model_generates_phi3_model(mocker: MockerFixture) -
     Phi3TextToTextModel.assert_called_once_with(path_or_model_name=PathOrModelName("path"))
 
 
-def test_create_text_to_text_model_generates_echo_model(mocker: MockerFixture) -> None:
-    EchoTextToTextModel = mocker.patch("olt2t.text_to_text_models.factory.EchoTextToTextModel")
-    settings = EchoTextToTextModelSettings()
-    actual = create_text_to_text_model(settings=settings)
-    assert actual == EchoTextToTextModel.return_value
-    EchoTextToTextModel.assert_called_once_with()
-
-
 def test_create_text_to_text_model_generates_openai_model(mocker: MockerFixture) -> None:
     OpenAiTextToTextModel = mocker.patch("olt2t.text_to_text_models.factory.OpenAiTextToTextModel")
     settings = OpenAiTextToTextModelSettings(api_key="key", openai_model_type=OpenAiModelType.GPT_4O_MINI)
@@ -38,6 +29,6 @@ def test_create_text_to_text_model_generates_openai_model(mocker: MockerFixture)
 
 
 def test_create_text_to_text_model_raises_value_error() -> None:
-    settings = BaseTextToTextModelSettings(type=TextToTextModelType.ECHO)
+    settings = BaseTextToTextModelSettings(type=TextToTextModelType.PHI_3)
     with pytest.raises(ValueError):
         create_text_to_text_model(settings=settings)  # type: ignore[arg-type]

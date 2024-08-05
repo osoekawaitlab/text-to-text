@@ -1,5 +1,6 @@
 from collections.abc import Generator
 from threading import Thread
+from typing import Dict, List
 
 from transformers import (
     AutoModelForCausalLM,
@@ -11,10 +12,10 @@ from transformers import (
 
 from ..models import StrT
 from ..settings import PathOrModelName
-from .base import BaseTextToTextModel
+from .base import BasicTextToTextModel
 
 
-class Phi3TextToTextModel(BaseTextToTextModel):
+class Phi3TextToTextModel(BasicTextToTextModel):
     def __init__(self, path_or_model_name: PathOrModelName) -> None:
         self._path_or_model_name = path_or_model_name
         self._model: PreTrainedModel | None = None
@@ -32,12 +33,7 @@ class Phi3TextToTextModel(BaseTextToTextModel):
             self._tokenizer = AutoTokenizer.from_pretrained(self._path_or_model_name)
         return self._tokenizer
 
-    def generate(self, text: StrT) -> Generator[StrT, None, None]:
-        messages = [
-            {"role": "system", "content": "You are a helpful AI assistant."},
-            {"role": "user", "content": str(text)},
-        ]
-
+    def generate(self, messages: List[Dict[str, str]]) -> Generator[StrT, None, None]:
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
 

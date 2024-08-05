@@ -1,13 +1,20 @@
 from collections.abc import Generator
+from typing import Dict, List
 
 from openai import OpenAI
+from openai.types.chat import (
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionMessageParam,
+    ChatCompletionSystemMessageParam,
+    ChatCompletionUserMessageParam,
+)
 
 from ..models import StrT
 from ..settings import ApiKey, OpenAiModelType
-from .base import BaseTextToTextModel
+from .base import BasicTextToTextModel
 
 
-class OpenAiTextToTextModel(BaseTextToTextModel):
+class OpenAiTextToTextModel(BasicTextToTextModel):
     def __init__(self, api_key: ApiKey, openai_model_type: OpenAiModelType) -> None:
         self._api_key = api_key
         self._openai_model_type = openai_model_type
@@ -19,12 +26,19 @@ class OpenAiTextToTextModel(BaseTextToTextModel):
             self._client = OpenAI(api_key=str(self._api_key))
         return self._client
 
-    def generate(self, text: StrT) -> Generator[StrT, None, None]:
+    def generate(self, messages: List[Dict[str, str]]) -> Generator[StrT, None, None]:
+        typed_messages: List[ChatCompletionMessageParam] = []
+        for message in messages:
+            if message["role"] == "system":
+                typed_messages.append(ChatCompletionSystemMessageParam(role="system", content=message["content"]))
+            elif message["role"] == "user":
+                typed_messages.append(ChatCompletionUserMessageParam(role="user", content=message["content"]))
+            elif message["role"] == "assistant":
+                typed_messages.append(ChatCompletionAssistantMessageParam(role="assistant", content=message["content"]))
+            else:
+                raise ValueError(f"Invalid role: {message['role']}")
         for generated in self.client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": str(text)},
-            ],
+            messages=typed_messages,
             model=self._openai_model_type.value,
             stream=True,
         ):

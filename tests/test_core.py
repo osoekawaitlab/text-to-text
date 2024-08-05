@@ -1,7 +1,7 @@
 from pytest_mock import MockerFixture
 
 from olt2t.core import TextToTextCore
-from olt2t.models import StrT
+from olt2t.models import ChatRoleType, ChatTask, ChatTurn, StrT, SummarizationTask
 from olt2t.settings import TextToTextCoreSettings
 from olt2t.text_to_text_models.base import BaseTextToTextModel
 
@@ -14,10 +14,27 @@ def test_core_create(mocker: MockerFixture) -> None:
     create_text_to_text_model.assert_called_once_with(settings=settings.text_to_text_model_settings)
 
 
-def test_core_generate(mocker: MockerFixture) -> None:
+def test_core_chat(mocker: MockerFixture) -> None:
     model = mocker.Mock(spec=BaseTextToTextModel)
-    model.generate.return_value = iter([StrT("word1"), StrT("word2")])
+    model.respond.return_value = iter([StrT("word1"), StrT("word2")])
+    task = ChatTask(
+        turns=[
+            ChatTurn(role=ChatRoleType.USER, content=StrT("How to make a cake?")),
+            ChatTurn(role=ChatRoleType.ASSISTANT, content=StrT("I don't know.")),
+            ChatTurn(role=ChatRoleType.USER, content=StrT("Okay.")),
+        ]
+    )
     core = TextToTextCore(model=model)
-    actual = list(core.generate(StrT("How to make a cake?")))
+    actual = list(core(task))
     assert actual == [StrT("word1"), StrT("word2")]
-    model.generate.assert_called_once_with(StrT("How to make a cake?"))
+    model.respond.assert_called_once_with(task.turns)
+
+
+def test_core_summarize(mocker: MockerFixture) -> None:
+    model = mocker.Mock(spec=BaseTextToTextModel)
+    model.summarize.return_value = StrT("word1")
+    task = SummarizationTask(text=StrT("How to make a cake?"), target_length=5)
+    core = TextToTextCore(model=model)
+    actual = core(task)
+    assert actual == StrT("word1")
+    model.summarize.assert_called_once_with(StrT("How to make a cake?"), target_length=5)

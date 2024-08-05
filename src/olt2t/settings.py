@@ -21,7 +21,6 @@ class BaseSettings(OltlBaseSettings):
 
 class TextToTextModelType(str, Enum):
     PHI_3 = "PHI_3"
-    ECHO = "ECHO"
     OPENAI = "OPENAI"
 
 
@@ -42,10 +41,6 @@ class Phi3TextToTextModelSettings(BaseHuggingFaceTextToTextModelSettings):
     type: Literal[TextToTextModelType.PHI_3] = TextToTextModelType.PHI_3
 
 
-class EchoTextToTextModelSettings(BaseTextToTextModelSettings):
-    type: Literal[TextToTextModelType.ECHO] = TextToTextModelType.ECHO
-
-
 class OpenAiTextToTextModelSettings(BaseTextToTextModelSettings):
     type: Literal[TextToTextModelType.OPENAI] = TextToTextModelType.OPENAI
     api_key: ApiKey
@@ -53,7 +48,7 @@ class OpenAiTextToTextModelSettings(BaseTextToTextModelSettings):
 
 
 TextToTextModelSettings = Annotated[
-    Union[EchoTextToTextModelSettings, Phi3TextToTextModelSettings, OpenAiTextToTextModelSettings],
+    Union[Phi3TextToTextModelSettings, OpenAiTextToTextModelSettings],
     Field(discriminator="type"),
 ]
 

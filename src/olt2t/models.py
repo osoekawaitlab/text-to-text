@@ -20,8 +20,9 @@ class SummaryTargetLength(LowerBoundIntegerMixIn):
 
 
 class ChatRoleType(str, Enum):
-    USER = "USER"
-    ASSISTANT = "ASSISTANT"
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
 
 
 class BaseModel(OltlBaseModel):
@@ -43,7 +44,7 @@ class SummarizationTask(BaseSingleTextTextTask):
 
 class ChatTurn(BaseModel):
     role: ChatRoleType
-    text: StrT
+    content: StrT
 
 
 class ChatTask(BaseTask):
