@@ -8,6 +8,11 @@ from pydantic import Field
 StrT: TypeAlias = BaseString
 
 
+class LanguageType(str, Enum):
+    ENGLISH = "English"
+    JAPANESE = "Japanese"
+
+
 class TaskType(str, Enum):
     SUMMARIZATION = "SUMMARIZATION"
     CHAT = "CHAT"
